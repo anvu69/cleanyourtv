@@ -7,13 +7,16 @@ debloat list is [`examples/xiaomi-mitv-mteq0/debloat.txt`](../../../examples/xia
 
 ## What is on top of upstream
 
-Proposed upstream (inert on other TVs):
+Proposed upstream (inert on other TVs), Gathin23/cleanyourtv#611:
 
 - `Config`: the theme overlay is read from a copy in app storage while external storage is not
-  mounted yet (Home starts before it at every boot on this set).
-- `res/font-vi`: Lexend for Vietnamese, because Outfit has no Vietnamese glyphs.
+  mounted yet (Home starts before it at every boot on this set). PR #614.
+- The debloat list and device notes. PR #612.
 
 Device patches, kept out of upstream on purpose:
+
+- **Vietnamese font** (`res/font-vi`): Lexend, because Outfit has no Vietnamese glyphs. Withdrawn
+  from upstream (#613): even subset it adds about 40 KB and upstream keeps the APK under 420 KB.
 
 - **HDMI/AV switching** (`MainActivity.xiaomiSourceIntent`): Inputs rows start
   `com.xiaomi.mitv.tvplayer/.ExternalSourceActivity` with `EXTSRC_PLAY` and the `input` extra
