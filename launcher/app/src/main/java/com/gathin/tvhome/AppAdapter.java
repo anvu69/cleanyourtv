@@ -385,9 +385,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.card.setOnClickListener(v -> launch(e));
         h.card.setOnLongClickListener(v -> {
             Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + e.pkg));
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             try {
-                ctx.startActivity(i);
+                ctx.startActivity(FallbackHome.ownTask(ctx, i));
             } catch (ActivityNotFoundException ignored) {
             }
             return true;
@@ -408,7 +407,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // already running resumes instead of restarting; only phone apps added from the library use plain MAIN.
         if (leanbackPackages.contains(e.pkg)) i.addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER);
         try {
-            ctx.startActivity(i);
+            ctx.startActivity(FallbackHome.ownTask(ctx, i));
             if (advancedEffects && ctx instanceof Activity) {
                 ((Activity) ctx).overridePendingTransition(R.anim.app_open_enter, R.anim.app_open_exit);
             }

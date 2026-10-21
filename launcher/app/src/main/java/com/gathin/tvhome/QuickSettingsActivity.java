@@ -61,7 +61,7 @@ public final class QuickSettingsActivity extends Activity {
         else hint.setVisibility(View.GONE);
         row.setOnClickListener(v -> {
             try {
-                startActivity(target.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                startActivity(FallbackHome.ownTask(this, target));
             } catch (ActivityNotFoundException e) {
                 Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show();
             }

@@ -8,12 +8,18 @@
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- InstallApprover talks to the TV's own adb daemon on 127.0.0.1 (LocalAdb); off unless config turns it on. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Needed since Android 10 to read the Wi-Fi network name for the network pill. Never requested at
          runtime: build-and-install grants it with pm grant, so lint's Android 12 "ask for COARSE with
          FINE" rule does not apply here. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
         tools:ignore="CoarseFineLocation" />
+    <!-- Lets HomeGuardService put HomeKeyService back after a force-stop (Xiaomi China firmware force-stops
+         every third-party app when the TV goes to sleep). Granted over adb with pm grant; unused otherwise. -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
 
     <!-- Android 11+ package visibility: lets the launcher list the TV apps it shows as tiles, and the
          apps that declare a module card (docs/specs/card.md). -->
@@ -124,6 +130,19 @@
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/input_key_service" />
+        </service>
+
+        <!-- Re-enables HomeKeyService after a force-stop: Android drops a force-stopped accessibility service
+             for good but rebinds notification listeners. Enable over adb with
+             `cmd notification allow_listener com.gathin.tvhome/com.gathin.tvhome.HomeGuardService`. -->
+        <service
+            android:name=".HomeGuardService"
+            android:label="@string/home_key_name"
+            android:exported="true"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
         </service>
     </application>
 </manifest>

@@ -121,7 +121,7 @@ public final class LauncherSettingsActivity extends Activity {
 
     private void open(Intent intent) {
         try {
-            startActivity(intent);
+            startActivity(FallbackHome.ownTask(this, intent));
         } catch (ActivityNotFoundException | SecurityException e) {
             Toast.makeText(this, R.string.not_available, Toast.LENGTH_LONG).show();
         }

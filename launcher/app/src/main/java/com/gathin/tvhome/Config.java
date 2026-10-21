@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.os.Environment;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -11,6 +12,8 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -154,7 +157,8 @@ final class Config {
 
         File dir = dir(ctx);
         File file = dir != null ? new File(dir, FILE_NAME) : null;
-        JSONObject json = read(file);
+        boolean mounted = Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState());
+        JSONObject json = readOverlay(ctx, file, mounted);
         if (json != null) {
             applied = true;
             dock = stringList(json, "dock_apps", dock);
@@ -187,7 +191,8 @@ final class Config {
         // A theme push or reset invalidates choices made on the TV. On first use, remember the
         // current theme without clearing choices from an older launcher version.
         SharedPreferences choices = ctx.getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE);
-        syncThemeChoices(choices, dir, file);
+        // An unmounted card looks like a theme reset; wait until it is readable before comparing.
+        if (mounted) syncThemeChoices(choices, dir, file);
         int chosenColumns = choices.getInt("columns", columns);
         if (chosenColumns >= 4 && chosenColumns <= 7) columns = chosenColumns;
         animations = choices.getBoolean("animations", animations);
@@ -205,6 +210,36 @@ final class Config {
                 shamsi, moduleCards, reducedMotion, dockTitle, dockRow, reorderButton, vpn, homeSettings, showStats, library, background,
                 Math.max(0, Math.min(100, skyIntensity)), settingsKeycodes, settingsKeyPanel, wallpaper, applied,
                 festival);
+    }
+
+    /** App stores whose stuck installs InstallApprover approves (config.json auto_approve_installers); empty is off. */
+    static List<String> autoApproveInstallers(Context ctx) {
+        File dir = dir(ctx);
+        JSONObject json = readOverlay(ctx, dir != null ? new File(dir, FILE_NAME) : null,
+                Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
+        return json == null ? Collections.emptyList()
+                : stringList(json, "auto_approve_installers", Collections.emptyList());
+    }
+
+    /**
+     * The overlay, or at boot, before external storage is mounted, the copy kept from the last time it was read:
+     * without it Home starts with the built-in dock order (seen on Xiaomi China firmware). A missing file on
+     * mounted storage still means no overlay, so deleting it resets the launcher as before.
+     */
+    private static JSONObject readOverlay(Context ctx, File file, boolean mounted) {
+        File copy = new File(ctx.getFilesDir(), FILE_NAME);
+        if (!mounted) return read(copy);
+        JSONObject json = read(file);
+        if (json == null) {
+            copy.delete();
+        } else {
+            try (FileOutputStream out = new FileOutputStream(copy)) {
+                out.write(json.toString().getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                Log.w(TAG, "could not keep a copy of " + file + ": " + e.getMessage());
+            }
+        }
+        return json;
     }
 
     private static void syncThemeChoices(SharedPreferences choices, File dir, File config) {

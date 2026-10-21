@@ -342,7 +342,7 @@ final class AppLibraryDialog {
         // TV apps keep the leanback launch intent, so an app already running resumes instead of restarting.
         if (tvPackages.contains(app.activityInfo.packageName)) intent.addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-        try { activity.startActivity(intent); }
+        try { activity.startActivity(FallbackHome.ownTask(activity, intent)); }
         catch (ActivityNotFoundException | SecurityException e) {
             Toast.makeText(activity, activity.getString(R.string.cant_open, label(app)), Toast.LENGTH_SHORT).show();
         }
@@ -372,7 +372,8 @@ final class AppLibraryDialog {
         addAction(rows, R.string.library_app_info, () -> {
             close();
             try {
-                activity.startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + pkg)));
+                activity.startActivity(FallbackHome.ownTask(activity,
+                        new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + pkg))));
             } catch (ActivityNotFoundException | SecurityException e) {
                 Toast.makeText(activity, activity.getString(R.string.cant_open, label(app)), Toast.LENGTH_SHORT).show();
             }

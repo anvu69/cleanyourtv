@@ -563,6 +563,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onResume() {
         super.onResume();
+        // HomeGuardService starts this at boot too, usually before config.json is readable; retry here.
+        InstallApprover.start(this);
         // A festival that started or ended while Home was in the background: rebuild with or without it.
         if (festive != festival.active(LocalDate.now())) {
             recreate();
@@ -1672,7 +1674,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     private void open(Intent i) {
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        FallbackHome.ownTask(this, i);
         try {
             startActivity(i);
         } catch (ActivityNotFoundException e) {
@@ -1684,6 +1686,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      *  which the Live TV app handles; where nothing takes that, the configured `input_action` is sent
      *  with the same URI instead (XGIMI's HDMI player only answers com.xgimi.action.hdmiPlayer). */
     private void openInput(String inputId) {
+        Intent xiaomi = xiaomiSourceIntent(inputId);
+        if (xiaomi != null) {
+            try {
+                startActivity(xiaomi);
+                return;
+            } catch (ActivityNotFoundException ignored) {
+                // not Xiaomi firmware: carry on with the standard route
+            }
+        }
         Uri uri = TvContract.buildChannelUriForPassthroughInput(inputId);
         Intent view = new Intent(Intent.ACTION_VIEW).setDataAndType(uri, "vnd.android.cursor.item/channel")
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -1697,6 +1708,25 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         }
         open(new Intent(inputAction).setDataAndType(uri, "vnd.android.cursor.item/channel"));
+    }
+
+    /**
+     * China-market Xiaomi TVs accept the channel URI without switching. Their source app takes an integer
+     * extra instead: HDMI port ".../HW<n>" is n + 18 and AV ".../HW<n>" is n (MiTV-MFTR0, MiTV-MTEQ0).
+     * An HDMI-CEC device (".../HDMI200008") switches through its parent port. Null for anything else.
+     */
+    private Intent xiaomiSourceIntent(String inputId) {
+        TvInputManager tim = (TvInputManager) getSystemService(TV_INPUT_SERVICE);
+        TvInputInfo info = tim == null ? null : tim.getTvInputInfo(inputId);
+        if (info != null && info.getParentId() != null) inputId = info.getParentId();
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\.(hdmi|composite)\\..*/HW(\\d+)$").matcher(inputId);
+        if (!m.find()) return null;
+        int hw = Integer.parseInt(m.group(2));
+        // ponytail: offset mapping seen on two MediaTek Xiaomi sets; other Xiaomi firmware may number differently
+        return new Intent("com.xiaomi.mitv.tvplayer.EXTSRC_PLAY")
+                .setClassName("com.xiaomi.mitv.tvplayer", "com.xiaomi.mitv.tvplayer.ExternalSourceActivity")
+                .putExtra("input", m.group(1).equals("hdmi") ? hw + 18 : hw)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
     /** Dropdown menu under the Inputs pill: HDMI ports (with connection state), AV and Live TV. */
