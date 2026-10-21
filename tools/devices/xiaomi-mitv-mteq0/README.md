@@ -75,9 +75,9 @@ in Git Bash on Windows with JDK 17 from mise; adjust the tool paths elsewhere.
 ## Verified on the set
 
 Home from HDMI, after a force-stop like the one standby does, and after a reboot; adb back on by
-itself 1 s after the firmware turned it off at boot; dock order kept across a reboot. A split-APK
-install from Aptoide was approved in 0.7 s by the same approver code in an earlier build installed
-as `com.gathin.tvhome`.
+itself 1 s after the firmware turned it off at boot; dock order kept across a reboot. After a real
+standby (the firmware force-stopped `com.ts.launcher` 2 s in) and wake, a split-APK install from
+Aptoide (FPT Play: base + 3 config splits) was approved in 0.7 s.
 
 ## Rollback
 
