@@ -9,6 +9,12 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Device patch (MiTV-MTEQ0), InstallApprover: talk to the TV's own adb daemon on 127.0.0.1 (LocalAdb) and
+         switch adb back on after the firmware turns it off at boot. Both are inert unless config.json lists
+         auto_approve_installers; WRITE_SECURE_SETTINGS is granted over adb with pm grant. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
     <!-- Needed since Android 10 to read the Wi-Fi network name for the network pill. Never requested at
          runtime: build-and-install grants it with pm grant, so lint's Android 12 "ask for COARSE with
          FINE" rule does not apply here. -->

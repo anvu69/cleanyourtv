@@ -364,6 +364,15 @@ final class Config {
     }
 
     /** Reads and parses the overlay; any problem means "no overlay", never a crash on the home screen. */
+    /** Device patch (MiTV-MTEQ0): stores whose stuck installs InstallApprover approves; empty means off. */
+    static List<String> autoApproveInstallers(Context ctx) {
+        File dir = dir(ctx);
+        JSONObject json = readOverlay(ctx, dir != null ? new File(dir, FILE_NAME) : null,
+                Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
+        return json == null ? Collections.emptyList()
+                : stringList(json, "auto_approve_installers", Collections.emptyList());
+    }
+
     /**
      * The overlay, or before external storage is mounted, the copy kept from the last time it was read. Home can
      * start before the card is mounted (seen at every boot on a Xiaomi MiTV-MTEQ0), and without the copy it comes

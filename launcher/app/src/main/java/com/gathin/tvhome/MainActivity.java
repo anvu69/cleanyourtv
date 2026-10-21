@@ -601,6 +601,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onResume() {
         super.onResume();
+        // Device patch (MiTV-MTEQ0): no-op unless config.json lists auto_approve_installers.
+        InstallApprover.start(this);
         // A festival that started or ended while Home was in the background: rebuild with or without it.
         if (festive != festival.active(LocalDate.now())) {
             recreate();

@@ -2,3 +2,7 @@
 # AndroidX code, not from renaming, and readable stack traces matter more in a sideloaded app
 # where crash reports arrive as screenshots.
 -dontobfuscate
+
+# Device patch (MiTV-MTEQ0): started by name through app_process as the adb shell (InstallApprover),
+# never called from app code.
+-keep class com.gathin.tvhome.ApproveInstalls { public static void main(java.lang.String[]); }
